@@ -24,6 +24,7 @@ int main(){
     float val;
     Casa *first = NULL;
     Casa *last = NULL;
+    Casa *aux;
 
     do{
         printf("|************************|\n");
@@ -47,8 +48,6 @@ int main(){
         if(respUsu == '1' && (!m || !n)){
             setbuf(stdin,NULL); printf("Insira valor de M: ");fscanf(stdin, "%I64u", &m);
             setbuf(stdin,NULL); printf("Insira valor de N: ");fscanf(stdin, "%I64u", &n);
-            printf("%llu %llu\n",m,n);
-            getch();
         }else if((respUsu >= '2' && respUsu <= '6') && (m && n)){
             switch(respUsu){
             case '2':
@@ -65,12 +64,19 @@ int main(){
             case '3':
                 do{
                     setbuf(stdin, NULL); printf("Poscicao [x y]: ");fscanf(stdin, "%I64u %I64u", &x, &y);
-                    setbuf(stdin, NULL); printf("Valor: ");fscanf(stdin, "%f", &val);
+                    setbuf(stdin, NULL); printf("Valor: ");fscanf(stdin, "%.2f", &val);
                 }while((x < 0 || x >= m) || (y < 0 || y >= n));
                 inserir_casa(criar_casa(x,y,val), &first, &last);
                 break;
             case '4':
-
+                do{
+                    setbuf(stdin, NULL); printf("Poscicao [x y]: ");fscanf(stdin, "%I64u %I64u", &x, &y);
+                    setbuf(stdin, NULL); printf("Valor: ");fscanf(stdin, "%f", &val);
+                }while((x < 0 || x >= m) || (y < 0 || y >= n));
+                aux = consultar_casa(first,x,y);
+                if(aux)
+                    printf("O valor na Posicao [%x,%y]: %f\n", x, y);
+                printf("O valor na Posicao [%x,%y]: 0\n", x, y);
                 break;
             case '5':
 
@@ -87,7 +93,6 @@ int main(){
             printf("Matriz criada com sucesso!\n");
         else if(respUsu == '2' && (delConfirm == 'S' || delConfirm == 's'))
             printf("Matriz removida com sucesso!\n");
-        system("PAUSE");
     }while(respUsu != '0');
 }
 
@@ -118,6 +123,8 @@ void inserir_casa(Casa *elem, Casa **first, Casa **last){
             setbuf(stdin,NULL);
             fscanf(stdin, "%c", &updateConfirm);
         }while(updateConfirm != 'S' && updateConfirm != 'N' && updateConfirm != 's' && updateConfirm != 'n');
+        if(updateConfirm == 'S' || updateConfirm == 's')
+            aux->val = elem->val;
     }else{
         if(*first){
             atual = *first;
