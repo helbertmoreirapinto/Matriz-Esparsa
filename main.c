@@ -324,6 +324,10 @@ int main(){
             }
             break;
         case 3: /*Criar celula*/
+            if(!m || !n){
+                printf("Matriz nao inicializada!\n");
+                break;
+            }
             do{
                 printf("Digite a posicao [x y]: ");
                 setbuf(stdin,NULL);
