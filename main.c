@@ -25,8 +25,24 @@ void remove_celula(int, int, Celula_PTR);
 void apagar_matriz(int*, int*, Celula_PTR*, Celula_PTR*);
 
 void apagar_matriz(int *m, int *n, Celula_PTR *headerX, Celula_PTR *headerY){
-    m = n = 0;
-//    dar free na lista toda
+    *m = *n = 0;        /*Free nos espacos alocados*/
+    Celula_PTR aux;
+    while(*headerX){
+        aux = *headerX;
+        while(aux){
+            if(aux->antY)
+                free(aux->antY);
+            aux = aux->proxY;
+        }
+        if((*headerX)->antX)
+            free((*headerX)->antX);
+        *headerX = (*headerX)->proxX;
+    }
+    while(*headerY){
+        if((*headerY)->antY)
+            free((*headerY)->antY);
+        *headerY = (*headerY)->proxY;
+    }
 }
 
 /*Ver logica para remover headers*/
@@ -64,19 +80,6 @@ int update_celula(){
 }
 
 float somar_coluna(Celula_PTR header, int coluna){
-//    float soma = 0;
-//    Celula_PTR aux;
-//    while(header){
-//        aux = header;
-//            while(header){
-//                if(header->y == coluna)
-//                    soma += header->val;
-//                header = header->proxY;
-//            }
-//        header = aux;
-//        header = header->proxX;
-//    }
-//    return soma;
     float soma = 0;
     while(header){
         if(header->y == coluna){
@@ -175,6 +178,7 @@ void inserir_celula(Celula_PTR elem, Celula_PTR *headerX, Celula_PTR *headerY){
                     }
                     listaY = listaY->proxY; /*roda o prox da lista em X*/
                 }
+                break;
             }
             auxHeaderX = auxHeaderX->proxX; /*roda o prox da lista em Y*/
         }
@@ -231,6 +235,7 @@ void inserir_celula(Celula_PTR elem, Celula_PTR *headerX, Celula_PTR *headerY){
                     }
                     listaX = listaX->proxX; /*roda o prox da lista em X*/
                 }
+                break;
             }
             auxHeaderY = auxHeaderY->proxY; /*roda o prox da lista em Y*/
         }
@@ -273,10 +278,11 @@ float consultar_celula(int x, int y, Celula_PTR header){
 }
 
 int main(){
-    int m, n;
+    int m , n;
     int x, y;
     int i;
     int op=-1;
+    m = n = 0;
     float val, aux;
     Celula_PTR firstX = NULL, firstY = NULL;
 
@@ -286,8 +292,8 @@ int main(){
         printf("|****************************|\n");
         printf("| 1 |Inicializar Matriz      |\n");
         printf("| 2 |Remover Matriz          |\n");
-        printf("| 3 |Inserir Elemento[x,y]   |\n");
-        printf("| 4 |Consultar Elemento[x,y] |\n");
+        printf("| 3 |Inserir Elemento[x y]   |\n");
+        printf("| 4 |Consultar Elemento[x y] |\n");
         printf("| 5 |Somar Linha             |\n");
         printf("| 6 |Somar Coluna            |\n");
         printf("| 0 |Sair                    |\n");
@@ -297,24 +303,32 @@ int main(){
         scanf("%d",&op);
         switch(op){
         case 1: /*Criar Matriz*/
-            printf("Digite valor de M: ");
-            setbuf(stdin,NULL);
-            scanf("%d",&m);
-            printf("Digite valor de N: ");
-            setbuf(stdin,NULL);
-            scanf("%d",&n);
-            printf("Matriz inicializada com sucesso!\n");
+            if(m && n)
+                printf("Matriz ja esta inicializada\n");
+            else{
+                printf("Digite valor de M: ");
+                setbuf(stdin,NULL);
+                scanf("%d",&m);
+                printf("Digite valor de N: ");
+                setbuf(stdin,NULL);
+                scanf("%d",&n);
+                printf("Matriz inicializada com sucesso!\n");
+            }
             break;
         case 2: /*Remove Matriz*/
-            apagar_matriz(&m, &n, &firstX, &firstY);
-            printf("Matriz removida com sucesso!\n");
+            if(!m && !n)
+                printf("Matriz nao inicializada!\n");
+            else{
+                apagar_matriz(&m, &n, &firstX, &firstY);
+                printf("Matriz removida com sucesso!\n");
+            }
             break;
         case 3: /*Criar celula*/
             do{
                 printf("Digite a posicao [x y]: ");
                 setbuf(stdin,NULL);
                 scanf("%d %d",&x,&y);
-            }while(x < 0 || y < 0 || x >= m || y>= n);   /*Enquanto nao digitar um X e um Y validos nao avanca*/
+            }while(x < 0 || y < 0 || x >= m || y >= n);   /*Enquanto nao digitar um X e um Y validos nao avanca*/
             printf("Digite o valor: ");
             setbuf(stdin,NULL);
             scanf("%f",&val);
