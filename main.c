@@ -13,13 +13,13 @@ struct Celula{
 typedef struct Celula Celula;
 typedef Celula* Celula_PTR;
 
+/*Prototipo das funcoes*/
 void inserir_celula(Celula_PTR, Celula_PTR*, Celula_PTR*);
 Celula_PTR criar_celula(int, int, float);
 float consultar_celula(int, int, Celula_PTR);
 
 void inserir_celula(Celula_PTR elem, Celula_PTR *headerX, Celula_PTR *headerY){
     printf("[%d,%d] = %.2f\n\n", elem->x, elem->y, elem->val);
-
     Celula_PTR auxHeaderX, auxHeaderY;
     Celula_PTR newHeaderX, newHeaderY;
     Celula_PTR listaX, listaY;
@@ -35,11 +35,12 @@ void inserir_celula(Celula_PTR elem, Celula_PTR *headerX, Celula_PTR *headerY){
     }else{
         auxHeaderX = *headerX;
         while(auxHeaderX){
-            if(elem->x < auxHeaderX->x && !auxHeaderX->proxX){
-                /*elem esta antes de auxHeaderX mas nao tem mais elementos na fila*/
+            if(elem->x < auxHeaderX->x){
+                /*se elem eh menor, ja insere*/
                 /*Criar e inserir HeaderX ANTES de auxHeaderX*/
                 newHeaderX = criar_celula(elem->x, -1, 0);
                 newHeaderX->proxY = elem;
+                elem->antY = newHeaderX;
                 newHeaderX->proxX = auxHeaderX;
                 newHeaderX->antX = auxHeaderX->antX;
                 if(auxHeaderX->antX)
@@ -47,11 +48,13 @@ void inserir_celula(Celula_PTR elem, Celula_PTR *headerX, Celula_PTR *headerY){
                 else
                     *headerX = newHeaderX;      /*Se nao tinha anterior, elem eh o primeiro HeaderX*/
                 auxHeaderX->antX = newHeaderX;
-            }else if(elem->x > auxHeaderX->x){
-                /*a lista rodou, passou o valor de elem e n�o achou HeaderX com seu valor*/
+                break;
+            }else if(elem->x > auxHeaderX->x && !auxHeaderX->proxX){
+                /*a lista rodou, passou o valor de elem e não achou HeaderX com seu valor*/
                 /*Criar e inserir HeaderX DEPOIS de auxHeaderX*/
                 newHeaderX = criar_celula(elem->x, -1, 0);
                 newHeaderX->proxY = elem;
+                elem->antY = newHeaderX;
                 newHeaderX->antX = auxHeaderX;
                 newHeaderX->proxX = auxHeaderX->proxX;
                 if(auxHeaderX->proxX)
@@ -66,16 +69,18 @@ void inserir_celula(Celula_PTR elem, Celula_PTR *headerX, Celula_PTR *headerY){
                         /*insere elem ANTES de lista*/
                         elem->antY = listaY->antY;
                         elem->proxY = listaY;
-                        listaY->antY->proxY = elem;
-                        listaY->antY = elem;
+                        if(listaY->antY){
+                            listaY->antY->proxY = elem;
+                            listaY->antY = elem;
+                        }
                         return;
-                    }else if(elem->y > listaY->y){
+                    }else if(elem->y > listaY->y && !listaY->proxY){
                         /*insere elem DEPOIS de lista*/
                         listaY->proxY = elem;
                         elem->antY = listaY;
                         return;
                     }else if(elem->y == listaY->y){
-                        printf("Celula ocupada com o valor%.2f\n",listaY->val);
+                        printf("Celula ocupada com o valor %.2f\n",listaY->val);
                         return;
                     }
                     listaY = listaY->proxY; /*roda o prox da lista em X*/
@@ -86,21 +91,25 @@ void inserir_celula(Celula_PTR elem, Celula_PTR *headerX, Celula_PTR *headerY){
 
         auxHeaderY = *headerY;
         while(auxHeaderY){
-            if(elem->y < auxHeaderY->y && !auxHeaderY->proxY){
+            if(elem->y < auxHeaderY->y){
                 /*Criar e inserir HeaderY ANTES de auxHeaderY*/
                 newHeaderY = criar_celula(-1, elem->y, 0);
                 newHeaderY->proxX = elem;
+                elem->antX = newHeaderY;
                 newHeaderY->proxY = auxHeaderY;
                 newHeaderY->antY = auxHeaderY->antY;
                 if(auxHeaderY->antY)
                     auxHeaderY->antY->proxY = newHeaderY;
                 else
-                    *headerY = newHeaderY;
+                    *headerY = newHeaderY;      /*Se nao tinha anterior, elem eh o primeiro HeaderY*/
                 auxHeaderY->antY = newHeaderY;
-            }else if(elem->y > auxHeaderY->y){
+                break;
+            }else if(elem->y > auxHeaderY->y && !auxHeaderY->proxY){
+                /*a lista rodou, passou o valor de elem e não achou HeaderY com seu valor*/
                 /*Criar e inserir HeaderY DEPOIS de auxHeaderY*/
                 newHeaderY = criar_celula(-1, elem->y, 0);
                 newHeaderY->proxX = elem;
+                elem->antX = newHeaderY;
                 newHeaderY->antY = auxHeaderY;
                 auxHeaderY->proxY = newHeaderY;
                 if(auxHeaderY->proxY)
@@ -111,14 +120,16 @@ void inserir_celula(Celula_PTR elem, Celula_PTR *headerX, Celula_PTR *headerY){
                 /*Achou HeaderY com o valor*/
                 listaX = auxHeaderY;
                 while(listaX){
-                    if(elem->x < listaX->x && !listaX->proxX){
+                    if(elem->x < listaX->x){
                         /*insere elem ANTES de lista*/
                         elem->antX = listaX->antX;
                         elem->proxX = listaX;
-                        listaX->antX->proxX = elem;
-                        listaX->antX = elem;
+                        if(listaX->antX){
+                            listaX->antX->proxX = elem;
+                            listaX->antX = elem;
+                        }
                         return;
-                    }else if(elem->x > listaX->x){
+                    }else if(elem->x > listaX->x && !listaX->proxX){
                         /*insere elem DEPOIS de lista*/
                         listaX->proxX = elem;
                         elem->antX = listaX;
@@ -155,10 +166,8 @@ float consultar_celula(int x, int y, Celula_PTR header){
     Celula_PTR aux;
     while(header){
         aux = header;
-        printf("\nX:%d ", header->x);
         if(header->x == x){
             while(header){
-                printf("Y:%d ",header->y);
                 if(header->y == y)
                     return header->val;
                 header = header->proxY;
