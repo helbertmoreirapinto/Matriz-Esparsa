@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <conio.h>
 
 struct Celula{
     int x;
@@ -17,6 +18,93 @@ typedef Celula* Celula_PTR;
 void inserir_celula(Celula_PTR, Celula_PTR*, Celula_PTR*);
 Celula_PTR criar_celula(int, int, float);
 float consultar_celula(int, int, Celula_PTR);
+float somar_linha(Celula_PTR, int);
+float somar_coluna(Celula_PTR, int);
+int update_celula();
+void remove_celula(int, int, Celula_PTR);
+void apagar_matriz(int*, int*, Celula_PTR*, Celula_PTR*);
+
+void apagar_matriz(int *m, int *n, Celula_PTR *headerX, Celula_PTR *headerY){
+    m = n = 0;
+//    dar free na lista toda
+}
+
+/*Ver logica para remover headers*/
+void remove_celula(int x, int y, Celula_PTR header){
+    while(header){
+        if(header->x == x){
+            while(header){
+                if(header->y == y){
+                    if(header->antX) header->antX->proxX = header->proxX;
+                    if(header->antY) header->antY->proxY = header->proxY;
+                    if(header->proxX) header->proxX->antX = header->antX;
+                    if(header->proxY) header->proxY->antY = header->antY;
+                    free(header);
+                    return;
+                }
+                header = header->proxY;
+            }
+            return;
+        }
+        header = header->proxX;
+    }
+}
+
+int update_celula(){
+    char op = '\0';
+    do{
+        printf("Deseja alterar os dados? [S/N] ");
+        setbuf(stdin,NULL);
+        scanf("%c",&op);
+    }while(op != 'S' && op != 's' && op != 'N' && op != 'n');
+    if(op == 'S' || op == 's')
+        return 1;
+    else
+        return 0;
+}
+
+float somar_coluna(Celula_PTR header, int coluna){
+//    float soma = 0;
+//    Celula_PTR aux;
+//    while(header){
+//        aux = header;
+//            while(header){
+//                if(header->y == coluna)
+//                    soma += header->val;
+//                header = header->proxY;
+//            }
+//        header = aux;
+//        header = header->proxX;
+//    }
+//    return soma;
+    float soma = 0;
+    while(header){
+        if(header->y == coluna){
+            while(header){
+                soma+=header->val;
+                header = header->proxX;
+            }
+            break;
+        }
+        header = header->proxY;
+    }
+    return soma;
+}
+
+float somar_linha(Celula_PTR header, int linha){
+    float soma = 0;
+    while(header){
+        if(header->x == linha){
+            while(header){
+                soma+=header->val;
+                header = header->proxY;
+            }
+            break;
+        }
+        header = header->proxX;
+    }
+    return soma;
+}
 
 void inserir_celula(Celula_PTR elem, Celula_PTR *headerX, Celula_PTR *headerY){
     printf("[%d,%d] = %.2f\n\n", elem->x, elem->y, elem->val);
@@ -28,9 +116,11 @@ void inserir_celula(Celula_PTR elem, Celula_PTR *headerX, Celula_PTR *headerY){
         /*lista vazia, criar Header X e Y*/
         newHeaderX = criar_celula(elem->x, -1, 0);
         newHeaderX->proxY = elem;
+        elem->antY = newHeaderX;
         *headerX = newHeaderX;
         newHeaderY = criar_celula(-1, elem->y, 0);
         newHeaderY->proxX = elem;
+        elem->antX = newHeaderY;
         *headerY = newHeaderY;
     }else{
         auxHeaderX = *headerX;
@@ -73,15 +163,15 @@ void inserir_celula(Celula_PTR elem, Celula_PTR *headerX, Celula_PTR *headerY){
                             listaY->antY->proxY = elem;
                             listaY->antY = elem;
                         }
-                        return;
+                        break;
                     }else if(elem->y > listaY->y && !listaY->proxY){
                         /*insere elem DEPOIS de lista*/
                         listaY->proxY = elem;
                         elem->antY = listaY;
-                        return;
+                        break;
                     }else if(elem->y == listaY->y){
-                        printf("Celula ocupada com o valor %.2f\n",listaY->val);
-                        return;
+                        listaY->val = elem->val;
+                        break;
                     }
                     listaY = listaY->proxY; /*roda o prox da lista em X*/
                 }
@@ -92,6 +182,7 @@ void inserir_celula(Celula_PTR elem, Celula_PTR *headerX, Celula_PTR *headerY){
         auxHeaderY = *headerY;
         while(auxHeaderY){
             if(elem->y < auxHeaderY->y){
+                /*se elem eh menor, ja insere*/
                 /*Criar e inserir HeaderY ANTES de auxHeaderY*/
                 newHeaderY = criar_celula(-1, elem->y, 0);
                 newHeaderY->proxX = elem;
@@ -128,14 +219,15 @@ void inserir_celula(Celula_PTR elem, Celula_PTR *headerX, Celula_PTR *headerY){
                             listaX->antX->proxX = elem;
                             listaX->antX = elem;
                         }
-                        return;
+                        break;
                     }else if(elem->x > listaX->x && !listaX->proxX){
                         /*insere elem DEPOIS de lista*/
                         listaX->proxX = elem;
                         elem->antX = listaX;
-                        return;
+                        break;
                     }else if(elem->x == listaX->x){
-                        return;
+                        listaX->val = elem->val;
+                        break;
                     }
                     listaX = listaX->proxX; /*roda o prox da lista em X*/
                 }
@@ -157,7 +249,7 @@ Celula_PTR criar_celula(int x, int y, float val){
         ret->antY = NULL;
     }else{
         printf("Problema ao alocar Memoria\n");
-        exit(10);
+        exit(0);
     }
     return ret;
 }
@@ -183,30 +275,96 @@ float consultar_celula(int x, int y, Celula_PTR header){
 int main(){
     int m, n;
     int x, y;
-    int op;
-    float val;
+    int i;
+    int op=-1;
+    float val, aux;
     Celula_PTR firstX = NULL, firstY = NULL;
-    Celula_PTR elem;
 
-    /*Criar matriz*/
-    printf("M: ");setbuf(stdin,NULL);scanf("%d",&m);
-    printf("N: ");setbuf(stdin,NULL);scanf("%d",&n);
-    while(1){
-        printf("opcao:\n1 - Inserir\n2 - Consultar\n");setbuf(stdin,NULL);scanf("%d",&op);
-        if(op==1){
-            /*Criar celula*/
-            printf("x: ");setbuf(stdin,NULL);scanf("%d",&x);
-            printf("y: ");setbuf(stdin,NULL);scanf("%d",&y);
-            printf("val: ");setbuf(stdin,NULL);scanf("%f",&val);
-
-            elem = criar_celula(x,y,val);
-            inserir_celula(elem, &firstX, &firstY);
-        }else if(op == 2){
-            /*Consultar celula*/
-            printf("x: ");setbuf(stdin,NULL);scanf("%d",&x);
-            printf("y: ");setbuf(stdin,NULL);scanf("%d",&y);
+    while(op){
+        printf("|****************************|\n");
+        printf("|       Matriz Esparsa       |\n");
+        printf("|****************************|\n");
+        printf("| 1 |Inicializar Matriz      |\n");
+        printf("| 2 |Remover Matriz          |\n");
+        printf("| 3 |Inserir Elemento[x,y]   |\n");
+        printf("| 4 |Consultar Elemento[x,y] |\n");
+        printf("| 5 |Somar Linha             |\n");
+        printf("| 6 |Somar Coluna            |\n");
+        printf("| 0 |Sair                    |\n");
+        printf("|****************************|\n");
+        printf("|Selecione: ");
+        setbuf(stdin,NULL);
+        scanf("%d",&op);
+        switch(op){
+        case 1: /*Criar Matriz*/
+            printf("Digite valor de M: ");
+            setbuf(stdin,NULL);
+            scanf("%d",&m);
+            printf("Digite valor de N: ");
+            setbuf(stdin,NULL);
+            scanf("%d",&n);
+            printf("Matriz inicializada com sucesso!\n");
+            break;
+        case 2: /*Remove Matriz*/
+            apagar_matriz(&m, &n, &firstX, &firstY);
+            printf("Matriz removida com sucesso!\n");
+            break;
+        case 3: /*Criar celula*/
+            do{
+                printf("Digite a posicao [x y]: ");
+                setbuf(stdin,NULL);
+                scanf("%d %d",&x,&y);
+            }while(x < 0 || y < 0 || x >= m || y>= n);   /*Enquanto nao digitar um X e um Y validos nao avanca*/
+            printf("Digite o valor: ");
+            setbuf(stdin,NULL);
+            scanf("%f",&val);
+            aux = consultar_celula(x,y,firstX);
+            if(aux){
+                printf("Casa ocupada com o valor %.2f\n",aux);
+                if(!update_celula())    /*Se usuario nao confirmar volta para o menu*/
+                    break;
+                if(!val)                /*Se valor novo eh 0, e usuario deseja atualizar valor, remover celula*/
+                    remove_celula(x, y, firstX);
+            }
+            inserir_celula(criar_celula(x,y,val), &firstX, &firstY);
+            break;
+        case 4: /*Consultar celula*/
+            do{
+                printf("Digite a posicao [x y]: ");
+                setbuf(stdin,NULL);
+                scanf("%d %d",&x,&y);
+            }while(x < 0 || y < 0 || x >= m || y>= n);   /*Enquanto nao digitar um X e um Y validos nao avanca*/
             val = consultar_celula(x,y,firstX);
-            printf("val: %.2f\n", val);
+            printf("[%d,%d]: %.2f\n",x,y,val);
+            break;
+        case 5: /*Somar Linha*/
+            do{
+                printf("Digite a linha: ");
+                setbuf(stdin,NULL);
+                scanf("%d",&i);
+            }while(i < 0 || i >= m);   /*Enquanto nao digitar uma linha valida nao avanca*/
+            val = somar_linha(firstX, i);
+            printf("Soma da linha %d: %.2f\n",i, val);
+            break;
+        case 6: /*Somar Coluna*/
+            do{
+                printf("Digite a coluna: ");
+                setbuf(stdin,NULL);
+                scanf("%d",&i);
+            }while(i < 0 || i >= n);   /*Enquanto nao digitar uma coluna valida nao avanca*/
+            val = somar_coluna(firstY, i);
+            printf("Soma da coluna %d: %.2f\n",i, val);
+            break;
+        case 0:
+            printf("Encerrando . . .\n");
+            break;
+        default:
+            system("CLS");
+            printf("Opcao Invalida!\n");
+        }
+        if(op>0&&op<=6){
+            getch();
+            system("CLS");
         }
     }
 }
